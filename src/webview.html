@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Issue Viewer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 20px;
+            background-color: #f6f8fa;
+        }
+        .container {
+            max-width: 800px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .title {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .meta {
+            color:rgb(88, 95, 103);
+            margin: 10px 0;
+            font-size:15px;
+        }
+        .user {
+            display: flex;
+            align-items: center;
+        }
+        .user img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        .status {
+            padding: 5px 10px;
+            border-radius: 40px;
+            font-size: 14px;
+            font-weight: bold;
+            width: 8%;
+        }
+        .closed { background: #cf222e; color: white; }
+        .open { background: #1f883d; color: white; }
+        .comment-count {
+            font-size: 14px;
+            color: #0366d6;
+        }
+        .body-container {
+            font-size: 14px;
+            margin: 20px;
+            border-radius: 10px;
+            border: 1px rgb(98, 107, 118) solid;
+        }
+        .footer {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .footer a {
+            text-decoration: none;
+            background: #0366d6;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="title">${title}</div>
+        <div class="status closed" v-if="${state} == 'closed'">closed</div>
+        <div class="status open" v-else>open</div>
+        
+        <div class="meta">
+            Issue #${number} opened by 
+            <span class="user">
+                <img src=${avatar_url} alt="User Avatar">
+                <a href=${user_html_url} style="font-size:18px; color:black;">${user_login}</a>
+            </span>
+            <br>
+            Created at: ${created_at}
+        </div>
+        
+        <div class="body-container">
+            <div style="padding: 15px;">${body}</div>
+        </div>
+        <div class="comment-count">Comments: 1</div>
+
+        <div class="footer">
+            <a href=${html_url} target="_blank">View on GitHub</a>
+        </div>
+    </div>
+</body>
+</html>
