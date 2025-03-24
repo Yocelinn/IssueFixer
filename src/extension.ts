@@ -3,6 +3,8 @@
 import { json } from 'stream/consumers';
 import * as vscode from 'vscode';
 import moment from 'moment';
+import * as fs from 'fs';
+import * as path from 'path';
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -21,7 +23,7 @@ export function activate(context: vscode.ExtensionContext) {
 		vscode.window.showInformationMessage('Hello World from IssueFixer!');
 	});
 
-	let disposable2 = vscode.commands.registerCommand('IssueFixer.searchIssue', async () => {
+	let findIssue = vscode.commands.registerCommand('IssueFixer.searchIssue', async () => {
         // 让用户输入仓库名称
         const repoName = await vscode.window.showInputBox({
             prompt: "Enter GitHub Repository (e.g., owner/repo)",
@@ -51,7 +53,7 @@ export function activate(context: vscode.ExtensionContext) {
     });
 
     context.subscriptions.push(disposable);
-	context.subscriptions.push(disposable2);
+	context.subscriptions.push(findIssue);
 
 }
 
@@ -60,6 +62,22 @@ interface Issue {
     body: string;
     html_url: string;
     [key: string]: any; // 允许任意属性
+}
+
+// 获取对象嵌套属性
+function getNestedProperty<T>(obj: Issue, property: string): any {
+    const parts = property.split('.');
+    let result = obj;
+
+    for (let part of parts) {
+        if (result && typeof result === 'object' && part in result) {
+            result = result[part];
+        } else {
+            throw new Error(`Path "${property}" is invalid: "${part}" not found.`);
+        }
+    }
+
+    return result;
 }
 
 async function searchIssue(repo: string, issueNumber: string) {
@@ -82,119 +100,30 @@ async function searchIssue(repo: string, issueNumber: string) {
             { enableScripts: true }
         );
 
-        // 在 WebView 里嵌入 GitHub 页面
-        // panel.webview.html = `
-        //     <html>
-        //     <head>
-        //         <style> body { font-family: sans-serif; padding: 20px; } </style>
-        //     </head>
-        //     <body>
-        //         <h1>${issueData.title}</h1>
-        //         <p>${issueData.body.replace(/\n/g, "<br>")}</p>
-				 
+        // 格式化Created_at
+        const formattedCreatedAt = moment(issueData.created_at).format('YYYY-MM-DD HH:mm:ss');
+         // 读取 HTML 模板文件
+         const templatePath = path.join(__dirname,'../src/components/', 'webview.html');
+         const templateContent = fs.readFileSync(templatePath, 'utf8');
 
-        //         <p><a href="${issueData.html_url}" target="_blank">View on GitHub</a></p>
-        //     </body>
-        //     </html>
-        // `;
-        panel.webview.html = `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GitHub Issue Viewer</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            padding: 20px;
-            background-color: #f6f8fa;
-        }
-        .container {
-            max-width: 800px;
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-        .title {
-            font-size: 24px;
-            font-weight: bold;
-        }
-        .meta {
-            color:rgb(88, 95, 103);
-            margin: 10px 0;
-            font-size:15px;
-        }
-        .user {
-            display: flex;
-            align-items: center;
-        }
-        .user img {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            margin-right: 10px;
-        }
-        .status {
-            padding: 5px 10px;
-            border-radius: 40px;
-            font-size: 14px;
-            font-weight: bold;
-            width: 8%;
-        }
-        .closed { background: #cf222e; color: white; }
-        .open { background: #1f883d; color: white; }
-        .comment-count {
-            font-size: 14px;
-            color: #0366d6;
-        }
-        .body-container {
-            font-size: 14px;
-            margin: 20px;
-            border-radius: 10px;
-            border: 1px rgb(98, 107, 118) solid;
-        }
-        .footer {
-            margin-top: 20px;
-            text-align: center;
-        }
-        .footer a {
-            text-decoration: none;
-            background: #0366d6;
-            color: white;
-            padding: 10px 15px;
-            border-radius: 5px;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="title">${issueData.title}</div>
-        <div class="status closed"  v-if="${issueData.state} == 'closed'">closed</div>
-        <div class="status open"  v-else> open </div>
-        
-        <div class="meta">
-            Issue #${issueData.number} opened by 
-            <span class="user">
-                <img src=${issueData.user.avatar_url} alt="User Avatar">
-                <a href=${issueData.user.html_url} style="font-size:18px; color:black;"> ${issueData.user.login}</a>
-            </span>
-            <br>
-            Created at: ${moment(issueData.created_at).format('YYYY-MM-DD HH:mm:ss')}
-        </div>
-        
-        <div class="body-container">
-            <div style ="padding: 15px;"> ${issueData.body} </div>
-        </div>
-        <div class="comment-count">Comments: 1</div>
-
-        <div class="footer">
-            <a href=${issueData.html_url} target="_blank">View on GitHub</a>
-        </div>
-    </div>
-</body>
-</html>`;
+         console.log(issueData.state);
+ 
+         // 替换模板中的变量,p1.trim()用于去除变量名称两边的空格,replace()用于给${x}格式的变量做替换赋值
+         const htmlContent = templateContent.replace(/\${(.*?)}/g, (match, p1) => {
+            switch (p1.trim()) {
+                case 'formatted_created_at':
+                    return formattedCreatedAt;
+                case 'body':
+                    if(issueData.body === '') {
+                        return 'No description provided.';
+                    }
+                    return issueData.body;
+                default:
+                    return getNestedProperty(issueData, p1.trim()) || match;
+            }
+         });
+ 
+         panel.webview.html = htmlContent;
     } catch (error) {
 		console.log(`error in finding issue : ${error}`);
         vscode.window.showErrorMessage(`Failed to fetch issue: ${error}`);

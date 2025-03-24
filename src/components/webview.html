@@ -11,8 +11,13 @@
             padding: 20px;
             background-color: #f6f8fa;
         }
+        .page {
+            display: flex;
+            justify-content: center; /* 水平居中 */
+        }
         .container {
-            max-width: 800px;
+            min-width: 800px;
+            max-width: 960px;
             background: white;
             padding: 20px;
             border-radius: 8px;
@@ -21,6 +26,7 @@
         .title {
             font-size: 24px;
             font-weight: bold;
+            color: grey;
         }
         .meta {
             color:rgb(88, 95, 103);
@@ -39,17 +45,17 @@
         }
         .status {
             padding: 5px 10px;
+            margin-top: 10px;
             border-radius: 40px;
-            font-size: 14px;
+            font-size: 15px;
             font-weight: bold;
             width: 8%;
+            text-align: center;
+
         }
         .closed { background: #cf222e; color: white; }
         .open { background: #1f883d; color: white; }
-        .comment-count {
-            font-size: 14px;
-            color: #0366d6;
-        }
+        
         .body-container {
             font-size: 14px;
             margin: 20px;
@@ -69,30 +75,33 @@
         }
     </style>
 </head>
-<body>
-    <div class="container">
-        <div class="title">${title}</div>
-        <div class="status closed" v-if="${state} == 'closed'">closed</div>
-        <div class="status open" v-else>open</div>
-        
-        <div class="meta">
-            Issue #${number} opened by 
-            <span class="user">
-                <img src=${avatar_url} alt="User Avatar">
-                <a href=${user_html_url} style="font-size:18px; color:black;">${user_login}</a>
-            </span>
-            <br>
-            Created at: ${created_at}
-        </div>
-        
-        <div class="body-container">
-            <div style="padding: 15px;">${body}</div>
-        </div>
-        <div class="comment-count">Comments: 1</div>
 
-        <div class="footer">
-            <a href=${html_url} target="_blank">View on GitHub</a>
+<body>
+    <div class="page">
+        <div class="container">
+            <div class="title">${title}</div>
+            <div class="status ${state}">${state}</div>
+            
+            <div class="meta">
+                Issue #${number} opened by 
+                <span class="user">
+                    <img src=${user.avatar_url} alt="User Avatar">
+                    <a href=${user.html_url} style="font-size:18px; color:black;">${user.login}</a>
+                </span>
+                <br>
+                Created at: ${formatted_created_at}
+            </div>
+            
+            <div class="body-container">
+                <div style="padding: 15px;">${body}</div>
+            </div>
+            
+    
+            <div class="footer">
+                <a href=${html_url} target="_blank">View on GitHub</a>
+            </div>
         </div>
     </div>
+
 </body>
 </html>
