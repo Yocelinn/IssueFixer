@@ -13,6 +13,7 @@
         }
         .page {
             display: flex;
+            flex-direction: column;
             justify-content: center; /* 水平居中 */
         }
         .container {
@@ -22,6 +23,7 @@
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin: 10px;
         }
         .title {
             font-size: 24px;
@@ -65,13 +67,39 @@
         .footer {
             margin-top: 20px;
             text-align: center;
+            display: flex;
+            justify-content: center;
+            gap: 80px;
         }
         .footer a {
             text-decoration: none;
             background: #0366d6;
             color: white;
             padding: 10px 15px;
-            border-radius: 5px;
+            border-radius: 10px;
+        }
+        .footer a:hover {
+            background-color: #378ae9; /* 鼠标悬停时的背景颜色 */
+        }
+        .footer button {
+            background: #078d07;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+        }
+        .footer button:hover {
+            background-color: #62d168; /* 鼠标悬停时的背景颜色 */
+        }
+
+        .footer button:active {
+            background-color: #3e8e41; /* 按钮被点击时的背景颜色 */
+            transform: scale(0.98); /* 按钮被点击时稍微缩小 */
+        }
+        .output-text {
+            color: #747474;
+            font-size: 14px;
         }
     </style>
 </head>
@@ -99,9 +127,31 @@
     
             <div class="footer">
                 <a href=${html_url} target="_blank">View on GitHub</a>
+                <button id="runPythonBtn">Fix This Issue</button>
             </div>
+        </div>
+        <div class="container">
+            <pre id="output" class="output-text">Program output...</pre>
         </div>
     </div>
 
 </body>
 </html>
+
+<script>
+    const vscode = acquireVsCodeApi(); // 获取 VS Code API
+
+    // 监听运行python项目按钮
+    document.getElementById("runPythonBtn").addEventListener("click", () => {
+        console.log("I am pressed! `w`");
+        vscode.postMessage({ command: "runPython" }); // 发送消息到插件
+    });
+
+    // 将项目输出结果显示到页面output组件中
+    window.addEventListener("message", event => {
+        const message = event.data;
+        if (message.command === "updateOutput") {
+            document.getElementById("output").innerText = message.output;
+        }
+    });
+</script>
