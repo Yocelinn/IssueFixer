@@ -130,7 +130,7 @@ async function searchIssue(repo: string, issueNumber: string) {
         // 监听 WebView 发送的消息
         panel.webview.onDidReceiveMessage((message) => {
             if (message.command === "runPython") {
-                runPython(panel);
+                runPython(panel, issueData);
             }
         });
     } catch (error) {
@@ -140,33 +140,38 @@ async function searchIssue(repo: string, issueNumber: string) {
 }
 	
 // 运行 Python 代码
-function runPython(panel: vscode.WebviewPanel) {
-    const pythonProcess = spawn("python", [path.join(__dirname, '../src/', "my_script.py")]);  // 简单测试文件能否运行
+function runPython(panel: vscode.WebviewPanel, issueData: Issue) {
+    // const pythonProcess = spawn("python", [path.join(__dirname, '../src/', "my_script.py")]);  // 简单测试文件能否运行
 
-    const pythonScript = path.join("<AutoCodeRover-path>", "app/main.py");
+    const pythonScript = "/home/yocelin/Desktop/ACR/auto-code-rover/app/main.py";
 
     const env = { 
         ...process.env,  // 复制当前环境变量
         PYTHONPATH: ".",
-        PATH: "/home/user/miniconda3/envs/auto-code-rover/bin:" + process.env.PATH // 确保使用 Conda 环境
+        PATH: "/home/yocelin/miniconda3/envs/auto-code-rover/bin:" + process.env.PATH, // 确保使用 Conda 环境
+        OPENAI_KEY: "sk-ff1b22ab6263449b81a779329eb99238", // 添加 OPENAI_KEY
+        OPENAI_API_BASE_URL: "https://api.deepseek.com/v1"  // 对具体的模型需要配置base_url
+
     };
 
-    // const pythonProcess = spawn("python", [
-    //     pythonScript,
-    //     "swe-bench",
-    //     "--model", "deepseek-chat",// 这里选择模型
-    //     "--setup-map", "<SWE-bench-path>/setup_result/setup_map.json",
-    //     "--tasks-map", "<SWE-bench-path>/setup_result/tasks_map.json",
-    //     "--output-dir", "output",
-    //     "--task", "django__django-11133" //这里拼接字符串为task格式， 即django__django-11133
-    // ], {
-    //     cwd: "<AutoCodeRover-path>",
-    //     env,  // 这里传入新的环境变量
-    //     shell: true
-    // });
+    const pythonProcess = spawn("python", [
+        pythonScript,
+        "swe-bench",
+        "--model", "deepseek-chat",// 这里选择模型
+        "--setup-map", "../SWE-bench/setup_result/setup_map.json",
+        "--tasks-map", "../SWE-bench/setup_result/tasks_map.json",
+        "--output-dir", "/home/yocelin/Desktop/GraduateProject/output",
+        // "--task", "django__django-11133" //这里拼接字符串为task格式， 即django__django-11133
+        "--task", "scikit-learn__scikit-learn-10297",
+    ], {
+        cwd: "/home/yocelin/Desktop/ACR/auto-code-rover",
+        env,  // 这里传入新的环境变量
+        shell: true
+    });
 
     let output = "";
     pythonProcess.stdout.on("data", (data) => {
+        vscode.window.showInformationMessage(`Patch for #${issueData.title} is generating...`);
         output += data.toString();
         panel.webview.postMessage({ command: "updateOutput", output }); // 发送 Python 结果到 WebView
     });
